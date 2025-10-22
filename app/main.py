@@ -23,12 +23,16 @@ app.add_middleware(
 if api_router is not None:
     app.include_router(api_router, prefix="/api")
 
+# Serve static frontend
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, HTMLResponse
 
-# Fallback ping if router import failed (keeps basic functionality in early stage)
+app.mount("/static", StaticFiles(directory="app\\static"), name="static")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def index():
-    return {"message": "Welcome to the Budget Planner API!"}
+    return FileResponse("app\\static\\index.html")
+
 @app.get("/api/ping")
 async def ping():
     return {"message": "pong"}
