@@ -127,7 +127,6 @@
             <div class="muted">Dane z endpointu <code>/api/reports/balance</code></div>
           </div>
           <div class="row">
-            <button id="addDemoBtn" title="Dodaj przykładowe dane">Dodaj demo transakcję</button>
             <button id="refreshBalanceBtn" title="Odśwież saldo">Odśwież saldo</button>
           </div>
         </div>
@@ -149,6 +148,141 @@
           </div>
         </div>
         <ul id="txList" style="list-style:none; margin:.5rem 0 0 0; padding:0;"></ul>
+      </div>
+      <div class="card" style="margin-top:1rem;">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="margin:0 0 .5rem 0;">Akcje danych</h3>
+            <div class="muted">Widoczne API: <code>POST /api/debug/clear</code></div>
+          </div>
+          <div class="row">
+            <button id="clearBtn" title="Usuń wszystkie dane">Wyczyść wszystko</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="row" style="justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin:0 0 .5rem 0;">Raport miesięczny</h3>
+            <div class="muted">Endpoint: <code>/api/reports/monthly?year=&month=</code> (domyślnie bieżący miesiąc)</div>
+          </div>
+          <div class="row">
+            <button id="monthlyBtn" title="Pobierz raport za bieżący miesiąc">Pobierz raport</button>
+          </div>
+        </div>
+        <div id="monthlyOut" class="muted" style="margin-top:.5rem;">(brak danych)</div>
+      </div>
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="margin:0 0 .5rem 0;">Raport wg kategorii</h3>
+            <div class="muted">Endpoint: <code>/api/reports/by-category</code></div>
+          </div>
+          <div class="row">
+            <button id="catReportBtn" title="Pobierz raport wg kategorii">Pobierz raport</button>
+          </div>
+        </div>
+        <ul id="catReportOut" style="list-style:none; margin:.5rem 0 0 0; padding:0;"></ul>
+      </div>
+
+      <!-- Kategorie: formularz i lista -->
+      <div class="card" style="margin-top:1rem;">
+        <h3 style="margin-top:0">Kategorie</h3>
+        <form id="catForm" class="row" style="gap:.5rem; align-items:flex-end;">
+          <div>
+            <label for="catName" class="muted">Nazwa</label><br>
+            <input id="catName" type="text" placeholder="np. Jedzenie" required style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div>
+            <label for="catColor" class="muted">Kolor</label><br>
+            <input id="catColor" type="color" value="#22d3ee" style="padding:.35rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <button type="submit">Dodaj kategorię</button>
+        </form>
+        <ul id="catList" style="list-style:none; margin:.75rem 0 0 0; padding:0;"></ul>
+      </div>
+
+      <!-- Transakcje: formularz dodawania -->
+      <div class="card" style="margin-top:1rem;">
+        <h3 style="margin-top:0">Dodaj transakcję</h3>
+        <form id="txForm" class="row" style="gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
+          <div>
+            <label class="muted" for="txType">Typ</label><br>
+            <select id="txType" required style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)">
+              <option value="income">Przychód</option>
+              <option value="expense">Wydatek</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted" for="txAmount">Kwota</label><br>
+            <input id="txAmount" type="number" step="0.01" min="0" placeholder="0.00" required style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div>
+            <label class="muted" for="txCategory">Kategoria</label><br>
+            <select id="txCategory" style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)">
+              <option value="">(Brak)</option>
+            </select>
+          </div>
+          <div style="min-width:240px; flex:1;">
+            <label class="muted" for="txDesc">Opis</label><br>
+            <input id="txDesc" type="text" placeholder="np. Zakupy spożywcze" style="width:100%; padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div>
+            <label class="muted" for="txDate">Data</label><br>
+            <input id="txDate" type="datetime-local" required style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div>
+            <label class="muted" for="txPlanned">Planowana?</label><br>
+            <input id="txPlanned" type="checkbox" />
+          </div>
+          <button type="submit">Dodaj</button>
+        </form>
+      </div>
+
+      <!-- Filtry i lista transakcji -->
+      <div class="card" style="margin-top:1rem;">
+        <div class="row" style="justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h3 style="margin:0 0 .5rem 0;">Transakcje – filtruj</h3>
+            <div class="muted">Endpoint: <code>/api/transactions</code></div>
+          </div>
+        </div>
+        <form id="filterForm" class="row" style="gap:.5rem; align-items:flex-end; flex-wrap:wrap; margin-top:.5rem;">
+          <div>
+            <label class="muted" for="fType">Typ</label><br>
+            <select id="fType" style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)">
+              <option value="">(Wszystkie)</option>
+              <option value="income">Przychód</option>
+              <option value="expense">Wydatek</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted" for="fCategory">Kategoria</label><br>
+            <select id="fCategory" style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)">
+              <option value="">(Wszystkie)</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted" for="fFrom">Od</label><br>
+            <input id="fFrom" type="date" style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div>
+            <label class="muted" for="fTo">Do</label><br>
+            <input id="fTo" type="date" style="padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div style="min-width:220px;">
+            <label class="muted" for="fQ">Szukaj</label><br>
+            <input id="fQ" type="text" placeholder="opis zawiera..." style="width:100%; padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <div>
+            <label class="muted" for="fLimit">Limit</label><br>
+            <input id="fLimit" type="number" min="1" value="20" style="width:90px; padding:.5rem; border-radius:8px; border:1px solid var(--surface-border); background:rgba(0,0,0,0.2); color:var(--text)" />
+          </div>
+          <button type="submit">Filtruj</button>
+        </form>
+        <ul id="txFiltered" style="list-style:none; margin:.75rem 0 0 0; padding:0;"></ul>
       </div>
     </div>
   </main>

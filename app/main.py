@@ -21,12 +21,26 @@ app.add_middleware(
 )
 
 # Database setup: create tables on startup
-from .database import Base, engine  # noqa: E402
+from .database import Base, engine, SessionLocal  # noqa: E402
 from . import models  # noqa: F401, ensure models are imported so tables are registered
 
 @app.on_event("startup")
 def on_startup():
+    # Ensure tables exist
     Base.metadata.create_all(bind=engine)
+    # Per requirement: remove all existing transactions so only real data from forms is used
+    try:
+        db = SessionLocal()
+        db.query(models.Transaction).delete()
+        db.commit()
+    except Exception:
+        # Avoid crashing the app on startup; in dev just ignore
+        pass
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
 
 if api_router is not None:
     app.include_router(api_router, prefix="/api")
