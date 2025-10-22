@@ -1,0 +1,57 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from typing import List
+
+from ..database import get_db
+from .. import models
+from ..schemas import CategoryCreate, CategoryUpdate, CategoryOut
+
+router = APIRouter(prefix="/categories", tags=["categories"])
+
+@router.get("", response_model=List[CategoryOut])
+def list_categories(db: Session = Depends(get_db)):
+    categories = db.scalars(select(models.Category).order_by(models.Category.name)).all()
+    return categories
+
+
+@router.post("", response_model=CategoryOut, status_code=201)
+def create_category(payload: CategoryCreate, db: Session = Depends(get_db)):
+    cat = models.Category(name=payload.name, color=payload.color)
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+@router.get("/{category_id}", response_model=CategoryOut)
+def get_category(category_id: int, db: Session = Depends(get_db)):
+    cat = db.get(models.Category, category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return cat
+
+
+@router.put("/{category_id}", response_model=CategoryOut)
+def update_category(category_id: int, payload: CategoryUpdate, db: Session = Depends(get_db)):
+    cat = db.get(models.Category, category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    if payload.name is not None:
+        cat.name = payload.name
+    if payload.color is not None:
+        cat.color = payload.color
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+@router.delete("/{category_id}", status_code=204)
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    cat = db.get(models.Category, category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    db.delete(cat)
+    db.commit()
+    return None
