@@ -44,3 +44,22 @@ Uwaga: Zgodnie z wymaganiem backend i frontend znajdują się w katalogu `app` (
 
 - CORS jest włączony dla lokalnego dev (np. `http://localhost:5173`), jednak w obecnej integracji frontend jest serwowany z tego samego hosta/portu, więc nie jest wymagany do działania.
 - Struktura jest gotowa do rozbudowy o modele, schematy, usługi i autentykację (JWT) w kolejnych etapach.
+
+## Nowe endpointy (bez wymogu logowania)
+
+- GET /api/categories — lista kategorii
+- POST /api/categories — utworzenie kategorii {name, color?}
+- GET /api/categories/{id}, PUT, DELETE — CRUD
+
+- GET /api/transactions — lista transakcji z filtrami: type, category_id, date_from, date_to, q, skip, limit
+- POST /api/transactions — utworzenie transakcji {type: income|expense, amount, description?, date, category_id?, is_planned?}
+- GET /api/transactions/{id}, PUT, DELETE — CRUD
+
+- GET /api/reports/balance — podsumowanie: {income, expense, net}
+
+Uwaga: W tym etapie brak autentykacji – wszystkie zasoby są globalne.
+
+## Frontend
+
+- Strona główna pokazuje status połączenia i podgląd salda (income/expense/net) pobierany z `/api/reports/balance`.
+- Przyciski: "Dodaj demo transakcję" (tworzy losowy przychód/wydatek) oraz "Odśwież saldo".

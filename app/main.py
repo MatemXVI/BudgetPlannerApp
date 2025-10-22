@@ -20,6 +20,14 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# Database setup: create tables on startup
+from .database import Base, engine  # noqa: E402
+from . import models  # noqa: F401, ensure models are imported so tables are registered
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
+
 if api_router is not None:
     app.include_router(api_router, prefix="/api")
 
@@ -33,6 +41,6 @@ app.mount("/static", StaticFiles(directory="app\\static"), name="static")
 async def index():
     return FileResponse("app\\static\\index.html")
 
-@app.get("/api/ping")
-async def ping():
-    return {"message": "pong"}
+# @app.get("/api/ping")
+# async def ping():
+#     return {"message": "pong"}

@@ -113,11 +113,42 @@
         <p class="muted">Ten interfejs jest serwowany przez FastAPI i łączy się z endpointem <code>/api/ping</code>.</p>
       </div>
 
-      <div class="card">
-        <div class="row" style="justify-content: space-between;">
-          <p style="margin:0"><strong>Status połączenia z API:</strong> <span id="status" class="muted">(oczekiwanie...)</span></p>
-          <button id="checkBtn">Sprawdź połączenie</button>
+<!--      <div class="card">-->
+<!--        <div class="row" style="justify-content: space-between;">-->
+<!--          <p style="margin:0"><strong>Status połączenia z API:</strong> <span id="status" class="muted">(oczekiwanie...)</span></p>-->
+<!--          <button id="checkBtn">Sprawdź połączenie</button>-->
+<!--        </div>-->
+<!--      </div>-->
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="row" style="justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin:0 0 .5rem 0;">Szybki podgląd salda</h3>
+            <div class="muted">Dane z endpointu <code>/api/reports/balance</code></div>
+          </div>
+          <div class="row">
+            <button id="addDemoBtn" title="Dodaj przykładowe dane">Dodaj demo transakcję</button>
+            <button id="refreshBalanceBtn" title="Odśwież saldo">Odśwież saldo</button>
+          </div>
         </div>
+        <div class="row" style="margin-top:.75rem; flex-wrap:wrap; gap:1.25rem;">
+          <div><strong>Przychody:</strong> <span id="income">0.00</span></div>
+          <div><strong>Wydatki:</strong> <span id="expense">0.00</span></div>
+          <div><strong>Saldo:</strong> <span id="net" class="muted">0.00</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="margin:0 0 .5rem 0;">Ostatnie transakcje</h3>
+            <div class="muted">Dane z endpointu <code>/api/transactions?limit=5</code></div>
+          </div>
+          <div class="row">
+            <button id="refreshTxBtn" title="Odśwież listę">Odśwież listę</button>
+          </div>
+        </div>
+        <ul id="txList" style="list-style:none; margin:.5rem 0 0 0; padding:0;"></ul>
       </div>
     </div>
   </main>
