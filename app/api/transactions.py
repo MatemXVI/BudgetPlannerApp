@@ -6,6 +6,7 @@ from typing import List, Optional
 from ..database import get_db
 from .. import models
 from ..schemas import TransactionCreate, TransactionUpdate, TransactionOut
+from ..deps import get_current_user
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -19,8 +20,9 @@ def list_transactions(
     q: Optional[str] = Query(None, description="search in description"),
     skip: int = 0,
     limit: int = 100,
+    current_user=Depends(get_current_user),
 ):
-    stmt = select(models.Transaction)
+    stmt = select(models.Transaction).where(models.Transaction.user_id == current_user.id)
     if type is not None:
         stmt = stmt.where(models.Transaction.type == type)
     if category_id is not None:
@@ -39,15 +41,16 @@ def list_transactions(
 
 
 @router.post("", response_model=TransactionOut, status_code=201)
-def create_transaction(payload: TransactionCreate, db: Session = Depends(get_db)):
-    # Validate category if provided
+def create_transaction(payload: TransactionCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    # Validate category if provided and belongs to current user
     if payload.category_id is not None:
         cat = db.get(models.Category, payload.category_id)
-        if not cat:
+        if not cat or cat.user_id != current_user.id:
             raise HTTPException(status_code=400, detail="Category does not exist")
 
     tx = models.Transaction(
         category_id=payload.category_id,
+        user_id=current_user.id,
         type=models.TxType(payload.type),
         amount=payload.amount,
         description=payload.description,
@@ -61,25 +64,24 @@ def create_transaction(payload: TransactionCreate, db: Session = Depends(get_db)
 
 
 @router.get("/{tx_id}", response_model=TransactionOut)
-def get_transaction(tx_id: int, db: Session = Depends(get_db)):
+def get_transaction(tx_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     tx = db.get(models.Transaction, tx_id)
-    if not tx:
+    if not tx or tx.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return tx
 
 
 @router.put("/{tx_id}", response_model=TransactionOut)
-def update_transaction(tx_id: int, payload: TransactionUpdate, db: Session = Depends(get_db)):
+def update_transaction(tx_id: int, payload: TransactionUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     tx = db.get(models.Transaction, tx_id)
-    if not tx:
+    if not tx or tx.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     if payload.category_id is not None:
-        if payload.category_id is not None:
-            if payload.category_id:
-                cat = db.get(models.Category, payload.category_id)
-                if not cat:
-                    raise HTTPException(status_code=400, detail="Category does not exist")
+        if payload.category_id:
+            cat = db.get(models.Category, payload.category_id)
+            if not cat or cat.user_id != current_user.id:
+                raise HTTPException(status_code=400, detail="Category does not exist")
         tx.category_id = payload.category_id
 
     if payload.type is not None:
@@ -100,9 +102,9 @@ def update_transaction(tx_id: int, payload: TransactionUpdate, db: Session = Dep
 
 
 @router.delete("/{tx_id}", status_code=204)
-def delete_transaction(tx_id: int, db: Session = Depends(get_db)):
+def delete_transaction(tx_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     tx = db.get(models.Transaction, tx_id)
-    if not tx:
+    if not tx or tx.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Transaction not found")
     db.delete(tx)
     db.commit()

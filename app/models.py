@@ -29,8 +29,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=False)
     color = Column(String(32), nullable=True)
-
-    # In a no-auth MVP, we don't scope by user. Field user_id omitted deliberately.
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
 
     transactions = relationship("Transaction", back_populates="category", cascade="all,delete", passive_deletes=True)
 
@@ -40,6 +39,7 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     type = Column(Enum(TxType), nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
     description = Column(String(255), nullable=True)

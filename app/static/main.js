@@ -15,7 +15,6 @@ const catReportOut = document.getElementById('catReportOut');
 // New form/list elements
 const catForm = document.getElementById('catForm');
 const catName = document.getElementById('catName');
-const catColor = document.getElementById('catColor');
 const catList = document.getElementById('catList');
 
 const txForm = document.getElementById('txForm');
@@ -42,6 +41,7 @@ const loginBtnEl = document.getElementById('loginBtn');
 const registerBtnEl = document.getElementById('registerBtn');
 const logoutBtnEl = document.getElementById('logoutBtn');
 const authStatusEl = document.getElementById('authStatus');
+const userEmailEl = document.getElementById('userEmail');
 
 function getToken() {
   try { return localStorage.getItem('access_token'); } catch { return null; }
@@ -69,21 +69,23 @@ function setAuthLoading(loading) {
 
 async function updateAuthUI() {
   const token = getToken();
-  if (!authStatusEl) return;
+  // Do not early return if authStatusEl is missing; still toggle buttons on pages without status element
   if (!token) {
-    authStatusEl.textContent = 'Nie zalogowano';
+    if (authStatusEl) authStatusEl.textContent = 'Nie zalogowano';
     if (logoutBtnEl) logoutBtnEl.style.display = 'none';
     if (loginBtnEl) loginBtnEl.style.display = '';
     if (registerBtnEl) registerBtnEl.style.display = '';
     if (authEmail) authEmail.disabled = false;
     if (authPassword) authPassword.disabled = false;
+    if (userEmailEl) { userEmailEl.style.display = 'none'; userEmailEl.textContent = ''; }
     return;
   }
   try {
     const res = await authFetch('/api/auth/me');
     if (!res.ok) throw new Error('Token nieważny');
     const me = await res.json();
-    authStatusEl.textContent = `Zalogowano jako: ${me.email}`;
+    if (authStatusEl) authStatusEl.textContent = `Zalogowano jako: ${me.email}`;
+    if (userEmailEl) { userEmailEl.textContent = me.email; userEmailEl.style.display = ''; }
     if (logoutBtnEl) logoutBtnEl.style.display = '';
     if (loginBtnEl) loginBtnEl.style.display = 'none';
     if (registerBtnEl) registerBtnEl.style.display = 'none';
@@ -91,12 +93,13 @@ async function updateAuthUI() {
     if (authPassword) authPassword.disabled = true;
   } catch (e) {
     clearToken();
-    authStatusEl.textContent = 'Nie zalogowano';
+    if (authStatusEl) authStatusEl.textContent = 'Nie zalogowano';
     if (logoutBtnEl) logoutBtnEl.style.display = 'none';
     if (loginBtnEl) loginBtnEl.style.display = '';
     if (registerBtnEl) registerBtnEl.style.display = '';
     if (authEmail) authEmail.disabled = false;
     if (authPassword) authPassword.disabled = false;
+    if (userEmailEl) { userEmailEl.style.display = 'none'; userEmailEl.textContent = ''; }
   }
 }
 
@@ -124,6 +127,7 @@ loginBtnEl?.addEventListener('click', async () => {
       setToken(data.access_token);
       if (authStatusEl) authStatusEl.textContent = 'Zalogowano';
       await updateAuthUI();
+      try { if (window.location.pathname === '/login' || window.location.pathname === '/register') window.location.href = '/'; } catch {}
     } else {
       throw new Error('Brak tokenu w odpowiedzi');
     }
@@ -169,6 +173,7 @@ registerBtnEl?.addEventListener('click', async () => {
       setToken(data.access_token);
       if (authStatusEl) authStatusEl.textContent = 'Zarejestrowano i zalogowano';
       await updateAuthUI();
+      try { if (window.location.pathname === '/login' || window.location.pathname === '/register') window.location.href = '/'; } catch {}
     }
   } catch (e) {
     if (authStatusEl) authStatusEl.textContent = 'Błąd rejestracji: ' + (e?.message ?? e);
@@ -181,11 +186,13 @@ logoutBtnEl?.addEventListener('click', async () => {
   clearToken();
   if (authStatusEl) authStatusEl.textContent = 'Wylogowano';
   await updateAuthUI();
+  // After logout, go to login page
+  try { if (window.location.pathname !== '/login') window.location.href = '/login'; } catch {}
 });
 
 async function refreshBalance() {
   try {
-    const res = await fetch('/api/reports/balance');
+    const res = await authFetch('/api/reports/balance');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (incomeEl) incomeEl.textContent = data.income;
@@ -202,7 +209,7 @@ async function refreshBalance() {
 
 async function loadRecentTransactions() {
   try {
-    const res = await fetch('/api/transactions?limit=5');
+    const res = await authFetch('/api/transactions?limit=5');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const items = await res.json();
     if (!txListEl) return;
@@ -230,7 +237,7 @@ async function loadRecentTransactions() {
 // Categories
 async function loadCategories() {
   try {
-    const res = await fetch('/api/categories');
+    const res = await authFetch('/api/categories');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const cats = await res.json();
     if (txCategory) {
@@ -244,7 +251,7 @@ async function loadCategories() {
         catList.innerHTML = '<li class="muted">Brak kategorii</li>';
       } else {
         catList.innerHTML = cats.map(c => `<li class="row" style="justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.12); padding:.35rem 0;">
-          <span><span style="display:inline-block; width:10px; height:10px; background:${c.color ?? '#666'}; border-radius:50%; margin-right:8px;"></span>${c.name}</span>
+          <span>${c.name}</span>
           <button data-del-cat="${c.id}" style="background:#ef4444; color:white; border-color:rgba(255,255,255,0.2)">Usuń</button>
         </li>`).join('');
         // attach delete listeners
@@ -253,7 +260,7 @@ async function loadCategories() {
             const id = btn.getAttribute('data-del-cat');
             if (!id) return;
             if (!confirm('Usunąć kategorię? Transakcje zostaną odłączone.')) return;
-            const r = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+            const r = await authFetch(`/api/categories/${id}`, { method: 'DELETE' });
             if (!r.ok && r.status !== 204) {
               alert('Nie udało się usunąć kategorii');
               return;
@@ -274,12 +281,11 @@ if (catForm) {
     e.preventDefault();
     try {
       const name = catName?.value?.trim();
-      const color = catColor?.value || null;
       if (!name) return;
-      const res = await fetch('/api/categories', {
+      const res = await authFetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color })
+        body: JSON.stringify({ name })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await res.json();
@@ -309,7 +315,7 @@ if (txForm) {
         date: rawDate.toISOString(),
         is_planned: !!txPlanned?.checked
       };
-      const res = await fetch('/api/transactions', {
+      const res = await authFetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -339,7 +345,7 @@ async function refreshFiltered() {
     if (fTo?.value) params.set('date_to', new Date(fTo.value + 'T23:59:59').toISOString());
     if (fQ?.value) params.set('q', fQ.value);
     if (fLimit?.value) params.set('limit', fLimit.value);
-    const res = await fetch('/api/transactions?' + params.toString());
+    const res = await authFetch('/api/transactions?' + params.toString());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const items = await res.json();
     if (!items.length) {
@@ -367,7 +373,7 @@ async function refreshFiltered() {
         const id = btn.getAttribute('data-del-tx');
         if (!id) return;
         if (!confirm('Usunąć transakcję?')) return;
-        const r = await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+        const r = await authFetch(`/api/transactions/${id}`, { method: 'DELETE' });
         if (!r.ok && r.status !== 204) { alert('Nie udało się usunąć'); return; }
         await refreshBalance();
         await loadRecentTransactions();
@@ -389,7 +395,7 @@ if (fForm) {
 // Reports
 async function fetchMonthly() {
   try {
-    const res = await fetch('/api/reports/monthly');
+    const res = await authFetch('/api/reports/monthly');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const d = await res.json();
     if (monthlyOut) {
@@ -408,7 +414,7 @@ async function fetchMonthly() {
 
 async function fetchByCategory() {
   try {
-    const res = await fetch('/api/reports/by-category');
+    const res = await authFetch('/api/reports/by-category');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const items = await res.json();
     if (!catReportOut) return;
@@ -433,7 +439,7 @@ async function fetchByCategory() {
 async function clearAll() {
   try {
     if (!confirm('Na pewno usunąć wszystkie dane (transakcje i kategorie)?')) return;
-    const res = await fetch('/api/debug/clear', { method: 'POST' });
+    const res = await authFetch('/api/debug/clear', { method: 'POST' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     await res.json();
     await refreshBalance();
@@ -454,9 +460,49 @@ clearBtn?.addEventListener('click', clearAll);
 monthlyBtn?.addEventListener('click', fetchMonthly);
 catReportBtn?.addEventListener('click', fetchByCategory);
 
+// Auth gate: redirect unauthenticated users to /login; redirect logged-in away from auth pages
+async function ensureAuthGate() {
+  const path = window.location.pathname;
+  const isApp = path === '/' || path === '/index.html';
+  const isAuthPage = path === '/login' || path === '/register';
+  const token = getToken();
+
+  // If on app page, require valid token
+  if (isApp) {
+    if (!token) {
+      window.location.href = '/login';
+      return false;
+    }
+    try {
+      const res = await authFetch('/api/auth/me');
+      if (!res.ok) throw new Error('unauthorized');
+      // valid
+    } catch {
+      clearToken();
+      window.location.href = '/login';
+      return false;
+    }
+  }
+
+  // If on login/register and already authenticated, go to app
+  if (isAuthPage && token) {
+    try {
+      const res = await authFetch('/api/auth/me');
+      if (res.ok) {
+        window.location.href = '/';
+        return false;
+      }
+    } catch {}
+  }
+  return true;
+}
+
 // Initial load
-updateAuthUI();
-refreshBalance();
-loadRecentTransactions();
-loadCategories();
-refreshFiltered();
+(async function init() {
+  await ensureAuthGate();
+  await updateAuthUI();
+  refreshBalance();
+  loadRecentTransactions();
+  loadCategories();
+  refreshFiltered();
+})();

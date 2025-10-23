@@ -28,19 +28,24 @@ from . import models  # noqa: F401, ensure models are imported so tables are reg
 def on_startup():
     # Ensure tables exist
     Base.metadata.create_all(bind=engine)
-    # Per requirement: remove all existing transactions so only real data from forms is used
+    # Lightweight startup migration: ensure user_id column exists for per-user data scoping
     try:
-        db = SessionLocal()
-        db.query(models.Transaction).delete()
-        db.commit()
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            # Categories.user_id
+            res = conn.execute(text("PRAGMA table_info('categories')"))
+            cols = {row[1] for row in res}
+            if 'user_id' not in cols:
+                conn.execute(text("ALTER TABLE categories ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE"))
+            # Transactions.user_id
+            res2 = conn.execute(text("PRAGMA table_info('transactions')"))
+            cols2 = {row[1] for row in res2}
+            if 'user_id' not in cols2:
+                conn.execute(text("ALTER TABLE transactions ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE"))
+            conn.commit()
     except Exception:
-        # Avoid crashing the app on startup; in dev just ignore
+        # Avoid crashing the app on startup; ignore migration errors in dev
         pass
-    finally:
-        try:
-            db.close()
-        except Exception:
-            pass
 
 if api_router is not None:
     app.include_router(api_router, prefix="/api")
@@ -54,6 +59,14 @@ app.mount("/static", StaticFiles(directory="app\\static"), name="static")
 @app.get("/", response_class=HTMLResponse)
 async def index():
     return FileResponse("app\\static\\index.html")
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page():
+    return FileResponse("app\\static\\login.html")
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page():
+    return FileResponse("app\\static\\register.html")
 
 # @app.get("/api/ping")
 # async def ping():

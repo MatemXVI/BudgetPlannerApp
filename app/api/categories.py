@@ -6,18 +6,23 @@ from typing import List
 from ..database import get_db
 from .. import models
 from ..schemas import CategoryCreate, CategoryUpdate, CategoryOut
+from ..deps import get_current_user
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 @router.get("", response_model=List[CategoryOut])
-def list_categories(db: Session = Depends(get_db)):
-    categories = db.scalars(select(models.Category).order_by(models.Category.name)).all()
+def list_categories(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    categories = db.scalars(
+        select(models.Category)
+        .where(models.Category.user_id == current_user.id)
+        .order_by(models.Category.name)
+    ).all()
     return categories
 
 
 @router.post("", response_model=CategoryOut, status_code=201)
-def create_category(payload: CategoryCreate, db: Session = Depends(get_db)):
-    cat = models.Category(name=payload.name, color=payload.color)
+def create_category(payload: CategoryCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    cat = models.Category(name=payload.name, color=payload.color, user_id=current_user.id)
     db.add(cat)
     db.commit()
     db.refresh(cat)
@@ -25,17 +30,17 @@ def create_category(payload: CategoryCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{category_id}", response_model=CategoryOut)
-def get_category(category_id: int, db: Session = Depends(get_db)):
+def get_category(category_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     cat = db.get(models.Category, category_id)
-    if not cat:
+    if not cat or cat.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Category not found")
     return cat
 
 
 @router.put("/{category_id}", response_model=CategoryOut)
-def update_category(category_id: int, payload: CategoryUpdate, db: Session = Depends(get_db)):
+def update_category(category_id: int, payload: CategoryUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     cat = db.get(models.Category, category_id)
-    if not cat:
+    if not cat or cat.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Category not found")
     if payload.name is not None:
         cat.name = payload.name
@@ -48,9 +53,9 @@ def update_category(category_id: int, payload: CategoryUpdate, db: Session = Dep
 
 
 @router.delete("/{category_id}", status_code=204)
-def delete_category(category_id: int, db: Session = Depends(get_db)):
+def delete_category(category_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     cat = db.get(models.Category, category_id)
-    if not cat:
+    if not cat or cat.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Category not found")
     db.delete(cat)
     db.commit()
