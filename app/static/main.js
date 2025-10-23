@@ -35,17 +35,153 @@ const fQ = document.getElementById('fQ');
 const fLimit = document.getElementById('fLimit');
 const txFiltered = document.getElementById('txFiltered');
 
-// Lightweight ping that does not depend on missing DOM elements
-async function checkPing() {
+// Auth elements
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const loginBtnEl = document.getElementById('loginBtn');
+const registerBtnEl = document.getElementById('registerBtn');
+const logoutBtnEl = document.getElementById('logoutBtn');
+const authStatusEl = document.getElementById('authStatus');
+
+function getToken() {
+  try { return localStorage.getItem('access_token'); } catch { return null; }
+}
+function setToken(t) {
+  try { localStorage.setItem('access_token', t); } catch {}
+}
+function clearToken() {
+  try { localStorage.removeItem('access_token'); } catch {}
+}
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+  const headers = new Headers(options.headers || {});
+  if (token) headers.set('Authorization', 'Bearer ' + token);
+  return fetch(url, { ...options, headers });
+}
+
+function setAuthLoading(loading) {
+  if (!loginBtnEl || !registerBtnEl) return;
+  loginBtnEl.disabled = loading;
+  registerBtnEl.disabled = loading;
+  if (logoutBtnEl) logoutBtnEl.disabled = loading;
+}
+
+async function updateAuthUI() {
+  const token = getToken();
+  if (!authStatusEl) return;
+  if (!token) {
+    authStatusEl.textContent = 'Nie zalogowano';
+    if (logoutBtnEl) logoutBtnEl.style.display = 'none';
+    if (loginBtnEl) loginBtnEl.style.display = '';
+    if (registerBtnEl) registerBtnEl.style.display = '';
+    if (authEmail) authEmail.disabled = false;
+    if (authPassword) authPassword.disabled = false;
+    return;
+  }
   try {
-    const res = await fetch('/api/ping');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    console.debug('Ping OK:', data);
+    const res = await authFetch('/api/auth/me');
+    if (!res.ok) throw new Error('Token nieważny');
+    const me = await res.json();
+    authStatusEl.textContent = `Zalogowano jako: ${me.email}`;
+    if (logoutBtnEl) logoutBtnEl.style.display = '';
+    if (loginBtnEl) loginBtnEl.style.display = 'none';
+    if (registerBtnEl) registerBtnEl.style.display = 'none';
+    if (authEmail) authEmail.disabled = true;
+    if (authPassword) authPassword.disabled = true;
   } catch (e) {
-    console.warn('Ping error:', e);
+    clearToken();
+    authStatusEl.textContent = 'Nie zalogowano';
+    if (logoutBtnEl) logoutBtnEl.style.display = 'none';
+    if (loginBtnEl) loginBtnEl.style.display = '';
+    if (registerBtnEl) registerBtnEl.style.display = '';
+    if (authEmail) authEmail.disabled = false;
+    if (authPassword) authPassword.disabled = false;
   }
 }
+
+loginBtnEl?.addEventListener('click', async () => {
+  if (!authEmail || !authPassword) return;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if (!email || !password) {
+    if (authStatusEl) authStatusEl.textContent = 'Podaj e-mail i hasło';
+    return;
+  }
+  try {
+    setAuthLoading(true);
+    const body = new URLSearchParams();
+    body.set('username', email);
+    body.set('password', password);
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data?.access_token) {
+      setToken(data.access_token);
+      if (authStatusEl) authStatusEl.textContent = 'Zalogowano';
+      await updateAuthUI();
+    } else {
+      throw new Error('Brak tokenu w odpowiedzi');
+    }
+  } catch (e) {
+    if (authStatusEl) authStatusEl.textContent = 'Błąd logowania: ' + (e?.message ?? e);
+  } finally {
+    setAuthLoading(false);
+  }
+});
+
+registerBtnEl?.addEventListener('click', async () => {
+  if (!authEmail || !authPassword) return;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if (!email || !password) {
+    if (authStatusEl) authStatusEl.textContent = 'Podaj e-mail i hasło';
+    return;
+  }
+  try {
+    setAuthLoading(true);
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const err = await res.json(); if (err?.detail) msg = err.detail; } catch {}
+      throw new Error(msg);
+    }
+    // Auto-login after successful registration
+    const body = new URLSearchParams();
+    body.set('username', email);
+    body.set('password', password);
+    const loginRes = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    if (!loginRes.ok) throw new Error('Rejestracja ok, ale logowanie nie powiodło się');
+    const data = await loginRes.json();
+    if (data?.access_token) {
+      setToken(data.access_token);
+      if (authStatusEl) authStatusEl.textContent = 'Zarejestrowano i zalogowano';
+      await updateAuthUI();
+    }
+  } catch (e) {
+    if (authStatusEl) authStatusEl.textContent = 'Błąd rejestracji: ' + (e?.message ?? e);
+  } finally {
+    setAuthLoading(false);
+  }
+});
+
+logoutBtnEl?.addEventListener('click', async () => {
+  clearToken();
+  if (authStatusEl) authStatusEl.textContent = 'Wylogowano';
+  await updateAuthUI();
+});
 
 async function refreshBalance() {
   try {
@@ -319,6 +455,7 @@ monthlyBtn?.addEventListener('click', fetchMonthly);
 catReportBtn?.addEventListener('click', fetchByCategory);
 
 // Initial load
+updateAuthUI();
 refreshBalance();
 loadRecentTransactions();
 loadCategories();

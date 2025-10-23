@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, condecimal
+from pydantic import BaseModel, Field, condecimal, EmailStr
 from typing import Optional, Literal
 from datetime import datetime, date
 
@@ -23,6 +23,29 @@ class CategoryOut(CategoryBase):
 
     class Config:
         from_attributes = True
+
+
+# User Schemas
+class UserBase(BaseModel):
+    email: EmailStr
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserOut(UserBase):
+    id: int
+    is_active: bool
+    is_superuser: bool
+
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 # Transaction Schemas
