@@ -9,7 +9,7 @@ from .. import models
 
 router = APIRouter(prefix="/debug", tags=["debug"])
 
-@router.post("/debug/seed-demo")
+@router.post("/seed-demo")
 def seed_demo(db: Session = Depends(get_db)):
     """Seed a few demo categories and random transactions. No auth required."""
     default_cats = [
@@ -50,7 +50,7 @@ def seed_demo(db: Session = Depends(get_db)):
     return {"categories_created": created, "transactions_created": tx_created}
 
 
-@router.post("/debug/clear")
+@router.post("/clear")
 def clear_all(db: Session = Depends(get_db)):
     """Danger: remove all transactions and categories. No auth for MVP."""
     tx_deleted = db.query(models.Transaction).delete()

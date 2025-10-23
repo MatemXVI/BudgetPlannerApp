@@ -38,7 +38,7 @@ def list_transactions(
     return txs
 
 
-@router.post("/", response_model=TransactionOut, status_code=201)
+@router.post("", response_model=TransactionOut, status_code=201)
 def create_transaction(payload: TransactionCreate, db: Session = Depends(get_db)):
     # Validate category if provided
     if payload.category_id is not None:
