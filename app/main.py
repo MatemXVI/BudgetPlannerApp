@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+import os
 
 try:
     # Local import so that the file can run even if optional deps are missing during scaffolding
@@ -11,6 +13,11 @@ app = FastAPI(title="Budget Planner API", openapi_url="/api/openapi.json")
 
 # Basic CORS setup for local dev
 from .core.config import settings
+from .core.security import SECRET_KEY
+
+# Session middleware required for OAuth (Authlib uses request.session)
+session_secret = os.getenv("SESSION_SECRET_KEY", SECRET_KEY)
+app.add_middleware(SessionMiddleware, secret_key=session_secret)
 
 app.add_middleware(
     CORSMiddleware,

@@ -42,6 +42,7 @@ const registerBtnEl = document.getElementById('registerBtn');
 const logoutBtnEl = document.getElementById('logoutBtn');
 const authStatusEl = document.getElementById('authStatus');
 const userEmailEl = document.getElementById('userEmail');
+const googleLoginBtn = document.getElementById('googleLoginBtn');
 
 function getToken() {
   try { return localStorage.getItem('access_token'); } catch { return null; }
@@ -496,6 +497,10 @@ async function ensureAuthGate() {
   }
   return true;
 }
+googleLoginBtn?.addEventListener('click', () => {
+  // Po prostu przekieruj do endpointu backendu
+  window.location.href = '/api/auth/google/login';
+});
 
 // Initial load
 (async function init() {
