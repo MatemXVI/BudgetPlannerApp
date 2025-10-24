@@ -160,11 +160,3 @@ Gotowy obraz dostępny na Docker Hub:
 ## Uruchomienie w Dockerze:
 ```bash
 docker run -p 8080:80 matemxvi/budgetplanner:latest
-
-## Uwaga dla Windows
-
-- Plik bazy SQLite trzymamy w wolumenie Dockera (`app_data`). To unika problemów z różnymi separatorami ścieżek i uprawnieniami.
-- W przypadku problemów z portem 8000 (zajęty), zmień mapowanie np. na `- "8080:8000"` w `docker-compose.yml` i ustaw `SERVER_BASE_URL=http://127.0.0.1:8080`.
-
-
-
