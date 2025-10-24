@@ -57,6 +57,11 @@ def delete_category(category_id: int, db: Session = Depends(get_db), current_use
     cat = db.get(models.Category, category_id)
     if not cat or cat.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Category not found")
+    # Detach transactions from this category for current user before deletion
+    db.query(models.Transaction).filter(
+        models.Transaction.user_id == current_user.id,
+        models.Transaction.category_id == category_id
+    ).update({models.Transaction.category_id: None})
     db.delete(cat)
     db.commit()
     return None

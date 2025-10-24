@@ -31,7 +31,8 @@ class Category(Base):
     color = Column(String(32), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
 
-    transactions = relationship("Transaction", back_populates="category", cascade="all,delete", passive_deletes=True)
+    # Do not cascade delete transactions when category is removed; we want to detach (set NULL)
+    transactions = relationship("Transaction", back_populates="category", passive_deletes=True)
 
 
 class Transaction(Base):

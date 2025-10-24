@@ -502,8 +502,24 @@ googleLoginBtn?.addEventListener('click', () => {
   window.location.href = '/api/auth/google/login';
 });
 
+// Read JWT token from URL query (?token=...) – fallback for OAuth flow
+function readTokenFromQuery() {
+  try {
+    const url = new URL(window.location.href);
+    const t = url.searchParams.get('token');
+    if (t) {
+      try { localStorage.setItem('access_token', t); } catch {}
+      url.searchParams.delete('token');
+      const newUrl = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '');
+      window.history.replaceState({}, document.title, newUrl || '/');
+    }
+  } catch {}
+}
+
 // Initial load
 (async function init() {
+  // Handle OAuth fallback token before enforcing auth gate
+  readTokenFromQuery();
   await ensureAuthGate();
   await updateAuthUI();
   refreshBalance();

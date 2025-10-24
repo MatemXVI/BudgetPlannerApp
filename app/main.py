@@ -60,20 +60,22 @@ if api_router is not None:
 # Serve static frontend
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
+from pathlib import Path
 
-app.mount("/static", StaticFiles(directory="app\\static"), name="static")
+static_dir = Path(__file__).parent / 'static'
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return FileResponse("app\\static\\index.html")
+    return FileResponse(str(static_dir / "index.html"))
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page():
-    return FileResponse("app\\static\\login.html")
+    return FileResponse(str(static_dir / "login.html"))
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page():
-    return FileResponse("app\\static\\register.html")
+    return FileResponse(str(static_dir / "register.html"))
 
 # @app.get("/api/ping")
 # async def ping():
