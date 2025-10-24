@@ -1,13 +1,14 @@
-fastapi>=0.119
+fastapi>=0.120
 uvicorn[standard]>=0.38.0
 pydantic>=2.12.3
 SQLAlchemy>=2.0.44
 PyMySQL>=1.1.2
 python-dotenv>=1.1.1
 passlib[bcrypt]==1.7.4
-bcrypt==4.3.0
+bcrypt==4.3.0 # wersja 5.0 ma problemy z hasłem
 python-jose[cryptography]==3.5.0
 email-validator>=2.3.0
-
 Authlib>=1.3.0
 pydantic-settings>=2.6.1
+pytest>=8.3.0
+httpx>=0.27.2

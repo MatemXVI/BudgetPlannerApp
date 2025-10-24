@@ -125,3 +125,26 @@ Invoke-WebRequest -Uri http://127.0.0.1:8000/api/reports/balance -Headers $Heade
 
 - Domyślnie używane jest SQLite. Możesz podać `DATABASE_URL` (np. MySQL przez `mysql+pymysql://user:pass@host:3306/db`).
 - W produkcji korzystaj z HTTPS i silnych kluczy w .env.
+
+
+## Testy
+
+Aplikacja ma zestaw testów oparty na pytest, obejmujący najważniejsze ścieżki backendu.
+
+Jak uruchomić testy:
+
+1. Zainstaluj zależności (uwzględnia pytest):
+   pip install -r requirements.txt
+2. Z katalogu głównego repo uruchom:
+   pytest -q
+
+Informacje o środowisku testowym:
+- Testy używają niezależnej, w pamięci (in-memory) bazy SQLite i nadpisują zależność get_db w FastAPI, więc nie modyfikują lokalnego pliku budget_planner.db.
+- Nie musisz konfigurować .env do testów – testy nie korzystają z Google OAuth end-to-end.
+- Testy uruchamiają FastAPI w TestClient, więc nie jest potrzebny działający serwer uvicorn.
+
+Zakres testów (skrót):
+- Autoryzacja: rejestracja, logowanie, /api/auth/me, obsługa duplikatu e‑maila, brak autoryzacji.
+- Kategorie: tworzenie, lista, usuwanie; weryfikacja odłączania transakcji (category_id=NULL) zamiast ich kasowania.
+- Transakcje i raporty: filtry, raport bilansu, raport miesięczny, raport wg kategorii.
+- Debug: /api/debug/clear kasuje tylko dane bieżącego użytkownika (izolacja użytkowników).
