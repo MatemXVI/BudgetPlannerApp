@@ -252,7 +252,7 @@ async function loadCategories() {
         catList.innerHTML = '<li class="muted">Brak kategorii</li>';
       } else {
         catList.innerHTML = cats.map(c => `<li class="row" style="justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.12); padding:.35rem 0;">
-          <span>${c.name}</span>
+          <strong>${c.name}</strong>
           <button data-del-cat="${c.id}" style="background:#ef4444; color:white; border-color:rgba(255,255,255,0.2)">Usuń</button>
         </li>`).join('');
         // attach delete listeners

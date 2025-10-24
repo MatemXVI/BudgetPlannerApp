@@ -148,3 +148,74 @@ Zakres testów (skrót):
 - Kategorie: tworzenie, lista, usuwanie; weryfikacja odłączania transakcji (category_id=NULL) zamiast ich kasowania.
 - Transakcje i raporty: filtry, raport bilansu, raport miesięczny, raport wg kategorii.
 - Debug: /api/debug/clear kasuje tylko dane bieżącego użytkownika (izolacja użytkowników).
+
+
+## Uruchomienie w Dockerze
+
+Poniżej dwie metody: sam Docker (docker build/run) oraz docker-compose (zalecane). Obie publikują aplikację na porcie 8000.
+
+### 1) Z docker-compose (prościej)
+
+1. Upewnij się, że masz zainstalowane Docker Desktop (Windows/Mac) lub Docker Engine + docker-compose.
+2. W katalogu projektu uruchom:
+   docker compose up --build
+3. Wejdź w przeglądarce na: http://127.0.0.1:8000
+
+Domyślnie:
+- Port 8000 w kontenerze mapowany jest na 8000 w Twoim systemie (8000:8000).
+- Dane SQLite zapisywane są w wolumenie Docker `app_data` pod ścieżką kontenera `/data/budget_planner.db`.
+- Zmienna `SERVER_BASE_URL` ustawiona jest na `http://127.0.0.1:8000` (pasuje do logowania Google w trybie lokalnym; pamiętaj, by ten sam redirect był dodany w Google Console).
+
+Możesz zatrzymać usługę skrótem Ctrl+C, a potem usunąć kontenery i sieci poleceniem:
+   docker compose down
+
+Z pozostawieniem danych (wolumen nie jest kasowany). Aby usunąć również dane:
+   docker compose down -v
+
+### 2) Czysty Docker (bez compose)
+
+Zbuduj obraz:
+   docker build -t budget-planner:latest .
+
+Uruchom kontener (z wolumenem na dane i mapowaniem portu):
+   docker run --name budget-planner \
+     -p 8000:8000 \
+     -e SERVER_BASE_URL=http://127.0.0.1:8000 \
+     -e DATABASE_URL=sqlite:////data/budget_planner.db \
+     -v budget_planner_data:/data \
+     -d budget-planner:latest
+
+Wejdź na http://127.0.0.1:8000
+
+Zatrzymanie i usunięcie kontenera:
+   docker stop budget-planner && docker rm budget-planner
+
+Usunięcie wolumenu z danymi (opcjonalnie, UWAGA – stracisz dane):
+   docker volume rm budget_planner_data
+
+### Zmienne środowiskowe w Dockerze
+
+- SECRET_KEY – klucz do podpisywania JWT (ustaw silny klucz w produkcji).
+- SESSION_SECRET_KEY – klucz dla SessionMiddleware (OAuth). Jeżeli nie ustawisz, użyty zostanie SECRET_KEY.
+- DATABASE_URL – URL bazy danych; domyślnie w obrazach ustawiamy `sqlite:////data/budget_planner.db` (plik w wolumenie).
+- SERVER_BASE_URL – publiczny adres serwera, używany do budowy redirect_uri dla Google OAuth.
+- GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET – dane klienta Google (opcjonalne – tylko jeśli używasz logowania Google).
+
+W docker-compose te zmienne są ładowane z pliku `.env` oraz nadpisywane wartościami z sekcji `environment`.
+
+### Google OAuth w Dockerze – ważne
+
+- Jeśli używasz `SERVER_BASE_URL=http://127.0.0.1:8000`, dodaj w Google Cloud Console dokładnie ten redirect URI: `http://127.0.0.1:8000/api/auth/google/callback`.
+- Jeżeli korzystasz z innego hosta/portu (np. reverse proxy), ustaw odpowiedni `SERVER_BASE_URL` i zaktualizuj redirect w Google.
+
+### Debugowanie
+
+- Logi kontenera:
+   docker compose logs -f app
+- Shell w kontenerze:
+   docker compose exec app sh
+
+### Uwaga dla Windows
+
+- Plik bazy SQLite trzymamy w wolumenie Dockera (`app_data`). To unika problemów z różnymi separatorami ścieżek i uprawnieniami.
+- W przypadku problemów z portem 8000 (zajęty), zmień mapowanie np. na `- "8080:8000"` w `docker-compose.yml` i ustaw `SERVER_BASE_URL=http://127.0.0.1:8080`.
