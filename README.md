@@ -159,4 +159,4 @@ Gotowy obraz dostępny na Docker Hub:
 
 ## Uruchomienie w Dockerze:
 ```bash
-docker run -p 8080:80 matemxvi/budgetplanner:latest
+docker run -p 8080:8000 matemxvi/budgetplanner:latest
