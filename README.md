@@ -155,8 +155,8 @@ Zakres testów (skrót):
 ## 🐳 Docker Image
 
 Gotowy obraz dostępny na Docker Hub:  
-👉 [matemxvi/budgetplanner](https://hub.docker.com/r/matemxvi/budgetplanner)
+👉 [matemxvi/budget-planner](https://hub.docker.com/r/matemxvi/budget-planner)
 
 ## Uruchomienie w Dockerze:
 ```bash
-docker run -d -p 8080:8000 matemxvi/budgetplanner:latest
+docker run -d -p 8000:8000 matemxvi/budget-planner:latest
