@@ -25,44 +25,66 @@ UI wyświetla e‑mail zalogowanego użytkownika obok przycisku „Wyloguj”.
 - requirements.txt — zależności
 - README.md — ten plik
 
-## Wymagania
+## Wersja produkcyjna - Uruchomienie w Dockerze
 
-- Python 3.11+
-- Pip/virtualenv
+## 🐳 Docker Image
 
-## Instalacja i uruchomienie (Windows PowerShell)
+Gotowy obraz dostępny na Docker Hub:  
+👉 [matemxvi/budget-planner](https://hub.docker.com/r/matemxvi/budget-planner)
 
-1. (Opcjonalnie) środowisko wirtualne
+## Pobranie obrazu
+```bash
+docker pull matemxvi/budget-planner
+```
+
+## Uruchomienie 
+```bash
+docker run -d -p 8000:8000 matemxvi/budget-planner:latest
+```
+
+UWAGA! W Dockerze nie działa logowanie przez konto Google!
+
+## Wersja developerska - Instalacja i uruchomienie
+
+  # Wymagania
+  - Python 3.11+
+  - Pip/virtualenv
+
+1. Pobranie kodu źródłowego
+  git clone https://github.com/matemxvi/budget-planner.git
+  cd budget-planner
+
+2. (Opcjonalnie) środowisko wirtualne
+  Windows:
+```bash
    python -m venv .venv
    .venv\Scripts\Activate.ps1
+```
+  Linux:
+```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+```
 
-2. Instalacja zależności
+3. Instalacja zależności
    pip install -r requirements.txt
 
-3. Konfiguracja środowiska (plik .env w katalogu głównym repo)
+4. Konfiguracja środowiska (plik .env w katalogu głównym repo)
    Przykład minimalny do pracy lokalnej przy adresie 127.0.0.1:8000:
 
-   SECRET_KEY=change-me-in-env
-   # (opcjonalnie) Jeżeli nie ustawisz, użyty zostanie SECRET_KEY
-   SESSION_SECRET_KEY=another-strong-secret
    # Baza (domyślnie SQLite w pliku)
    DATABASE_URL=sqlite:///./budget_planner.db
    # Adres serwera używany do budowy redirect_uri w OAuth Google
    SERVER_BASE_URL=http://127.0.0.1:8000
-   # Dane klienta Google OAuth (z Google Cloud Console)
+   # Dane klienta Google OAuth (z Google Cloud Console) - konieczne do logowania przez Google
    GOOGLE_CLIENT_ID=...twoj_client_id...
    GOOGLE_CLIENT_SECRET=...twoj_client_secret...
 
-   Uwaga: nie umieszczaj prawdziwych sekretów w repozytorium. 
-   SECRET_KEY jest używany do podpisywania JWT, a SESSION_SECRET_KEY — przez SessionMiddleware.
-
-4. Start aplikacji (dev)
+5. Start aplikacji (dev)
    uvicorn app.main:app --reload
 
-5. Wejdź w przeglądarce:
-   - http://127.0.0.1:8000/ — aplikacja (wymaga zalogowania)
-   - http://127.0.0.1:8000/login — logowanie (e‑mail/hasło lub „Zaloguj przez Google”)
-   - http://127.0.0.1:8000/register — rejestracja
+6. Wejdź w przeglądarce:
+   - http://127.0.0.1:8000/ — aplikacja (wymaga zalogowania, w przypadku braku użytkownika rejestracji, można zrobić przez konto Google)
    - Swagger/OpenAPI: http://127.0.0.1:8000/docs
 
 ## Konfiguracja logowania przez Google
@@ -81,7 +103,7 @@ UI wyświetla e‑mail zalogowanego użytkownika obok przycisku „Wyloguj”.
 
 ## Jak korzystać (frontend)
 
-- Wejdź na /register i utwórz konto lub na /login i zaloguj się.
+- Na ekranie logowania kliknij Zarejestruj się lub Zaloguj się jezeli już posiadasz konto
 - Aby użyć logowania Google, kliknij „Zaloguj przez Google”; po powrocie token JWT zostanie zapisany w localStorage, a aplikacja przekieruje na „/”.
 - Po zalogowaniu w nagłówku obok „Wyloguj” zobaczysz swój adres e‑mail.
 - W aplikacji możesz dodawać kategorie i transakcje, filtrować, kasować oraz przeglądać szybkie raporty.
@@ -148,15 +170,3 @@ Zakres testów (skrót):
 - Kategorie: tworzenie, lista, usuwanie; weryfikacja odłączania transakcji (category_id=NULL) zamiast ich kasowania.
 - Transakcje i raporty: filtry, raport bilansu, raport miesięczny, raport wg kategorii.
 - Debug: /api/debug/clear kasuje tylko dane bieżącego użytkownika (izolacja użytkowników).
-
-
-## Uruchomienie w Dockerze
-
-## 🐳 Docker Image
-
-Gotowy obraz dostępny na Docker Hub:  
-👉 [matemxvi/budget-planner](https://hub.docker.com/r/matemxvi/budget-planner)
-
-## Uruchomienie w Dockerze:
-```bash
-docker run -d -p 8000:8000 matemxvi/budget-planner:latest
