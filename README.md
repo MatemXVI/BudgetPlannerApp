@@ -25,7 +25,7 @@ UI wyświetla e‑mail zalogowanego użytkownika obok przycisku „Wyloguj”.
 - requirements.txt — zależności
 - README.md — ten plik
 
-## Wersja produkcyjna - Uruchomienie w Dockerze
+# Wersja produkcyjna - Uruchomienie w Dockerze
 
 ## 🐳 Docker Image
 
@@ -44,9 +44,9 @@ docker run -d -p 8000:8000 matemxvi/budget-planner:latest
 
 UWAGA! W Dockerze nie działa logowanie przez konto Google!
 
-## Wersja developerska - Instalacja i uruchomienie
+# Wersja developerska - Instalacja i uruchomienie
 
-  # Wymagania
+## Wymagania
   - Python 3.11+
   - Pip/virtualenv
 
@@ -72,11 +72,11 @@ UWAGA! W Dockerze nie działa logowanie przez konto Google!
 4. Konfiguracja środowiska (plik .env w katalogu głównym repo)
    Przykład minimalny do pracy lokalnej przy adresie 127.0.0.1:8000:
 
-   # Baza (domyślnie SQLite w pliku)
+   ## Baza (domyślnie SQLite w pliku)
    DATABASE_URL=sqlite:///./budget_planner.db
-   # Adres serwera używany do budowy redirect_uri w OAuth Google
+   ## Adres serwera używany do budowy redirect_uri w OAuth Google
    SERVER_BASE_URL=http://127.0.0.1:8000
-   # Dane klienta Google OAuth (z Google Cloud Console) - konieczne do logowania przez Google
+   ## Dane klienta Google OAuth (z Google Cloud Console) - konieczne do logowania przez Google
    GOOGLE_CLIENT_ID=...twoj_client_id...
    GOOGLE_CLIENT_SECRET=...twoj_client_secret...
 
