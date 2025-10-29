@@ -62,14 +62,16 @@ python -m venv .venv
 ```
   Linux:
 ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 3. Instalacja zależności
-   pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
 
-4. Konfiguracja środowiska (plik .env w katalogu głównym repo)
+5. Konfiguracja środowiska (plik .env w katalogu głównym repo)
    Przykład minimalny do pracy lokalnej przy adresie 127.0.0.1:8000:
 
 ### Baza (domyślnie SQLite w pliku)
