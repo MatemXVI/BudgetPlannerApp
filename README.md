@@ -49,14 +49,16 @@ UWAGA! W Dockerze nie działa logowanie przez konto Google!
   - Pip/virtualenv
 
 1. Pobranie kodu źródłowego
-  git clone https://github.com/matemxvi/budget-planner.git
-  cd budget-planner
+```bash
+git clone https://github.com/matemxvi/budget-planner.git
+cd budget-planner
+```
 
-2. (Opcjonalnie) środowisko wirtualne
+3. (Opcjonalnie) środowisko wirtualne
   Windows:
 ```bash
-   python -m venv .venv
-   .venv\Scripts\Activate.ps1
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 ```
   Linux:
 ```bash
