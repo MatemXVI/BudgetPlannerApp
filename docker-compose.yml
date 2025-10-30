@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: budget-planner-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Ensure the app uses the DB file stored on a volume, not inside image
+      - DATABASE_URL=sqlite:////data/budget_planner.db
+      # When running via Docker with port mapping 8000:8000, this base URL works for OAuth redirects
+      - SERVER_BASE_URL=http://127.0.0.1:8000
+    volumes:
+      - app_data:/data
+    restart: unless-stopped
+
+volumes:
+  app_data:
+    driver: local
