@@ -40,7 +40,7 @@ docker pull matemxvi/budget-planner
 docker run -d -p 8000:8000 matemxvi/budget-planner:latest
 ```
 
-UWAGA! W Dockerze nie działa logowanie przez konto Google!
+UWAGA! W Dockerze obecnie nie działa logowanie przez konto Google!
 
 ## Wersja developerska - Instalacja i uruchomienie
 
@@ -54,7 +54,7 @@ git clone https://github.com/matemxvi/budget-planner.git
 cd budget-planner
 ```
 
-3. (Opcjonalnie) środowisko wirtualne
+2. (Opcjonalnie) środowisko wirtualne
   Windows:
 ```bash
 python -m venv .venv
@@ -71,8 +71,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-5. Konfiguracja środowiska (plik .env w katalogu głównym repo)
-   Przykład minimalny do pracy lokalnej przy adresie 127.0.0.1:8000:
+4. Konfiguracja środowiska (plik .env w katalogu głównym repo)
+Przykład minimalny do pracy lokalnej przy adresie 127.0.0.1:8000:
 
 ### Baza (domyślnie SQLite w pliku)
    DATABASE_URL=sqlite:///./budget_planner.db
